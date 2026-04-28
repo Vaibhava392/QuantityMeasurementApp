@@ -1,8 +1,10 @@
 public class QuantityMeasurementApp {
 
     public enum LengthUnit {
+        YARDS(36.0),
         FEET(12.0),
-        INCH(1.0);
+        INCH(1.0),
+        CENTIMETERS(0.393701);
 
         private final double conversionFactor;
 
@@ -29,19 +31,15 @@ public class QuantityMeasurementApp {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-
-            if (obj == null || getClass() != obj.getClass()) {
-                return false;
-            }
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
 
             Quantity that = (Quantity) obj;
             double value1 = this.unit.convertToBase(this.value);
             double value2 = that.unit.convertToBase(that.value);
 
-            return Double.compare(value1, value2) == 0;
+            // Using a small epsilon for floating-point comparison with CM
+            return Math.abs(value1 - value2) < 0.00001;
         }
 
         @Override
@@ -51,15 +49,23 @@ public class QuantityMeasurementApp {
     }
 
     public static void main(String[] args) {
-        Quantity oneFoot = new Quantity(1.0, LengthUnit.FEET);
-        Quantity twelveInches = new Quantity(12.0, LengthUnit.INCH);
-        Quantity oneInch = new Quantity(1.0, LengthUnit.INCH);
-        Quantity anotherOneInch = new Quantity(1.0, LengthUnit.INCH);
+        // UC4 Test Cases
+        Quantity oneYard = new Quantity(1.0, LengthUnit.YARDS);
+        Quantity threeFeet = new Quantity(3.0, LengthUnit.FEET);
+        Quantity thirtySixInches = new Quantity(36.0, LengthUnit.INCH);
+        Quantity oneCm = new Quantity(1.0, LengthUnit.CENTIMETERS);
+        Quantity inchValueForCm = new Quantity(0.393701, LengthUnit.INCH);
 
-        System.out.println("Input: Quantity(1.0, \"feet\") and Quantity(12.0, \"inches\")");
-        System.out.println("Output: Equal (" + oneFoot.equals(twelveInches) + ")");
+        System.out.println("--- Yard Comparisons ---");
+        System.out.println("1 Yard == 3 Feet: " + oneYard.equals(threeFeet));
+        System.out.println("1 Yard == 36 Inches: " + oneYard.equals(thirtySixInches));
 
-        System.out.println("Input: Quantity(1.0, \"inch\") and Quantity(1.0, \"inch\")");
-        System.out.println("Output: Equal (" + oneInch.equals(anotherOneInch) + ")");
+        System.out.println("\n--- Centimeter Comparisons ---");
+        System.out.println("1 CM == 0.393701 Inches: " + oneCm.equals(inchValueForCm));
+
+        System.out.println("\n--- Cross-Unit Scalability ---");
+        Quantity twoYards = new Quantity(2.0, LengthUnit.YARDS);
+        Quantity sixFeet = new Quantity(6.0, LengthUnit.FEET);
+        System.out.println("2 Yards == 6 Feet: " + twoYards.equals(sixFeet));
     }
 }
