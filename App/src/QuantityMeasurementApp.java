@@ -35,17 +35,29 @@ public class QuantityMeasurementApp {
         }
 
         /**
-         * Instance method to add another length to this one.
-         * The result unit is the unit of the first operand (this).
+         * UC6: Implicit addition (defaults to current unit)
          */
         public QuantityLength add(QuantityLength other) {
+            return add(other, this.unit);
+        }
+
+        /**
+         * UC7: Explicit addition with target unit specification
+         */
+        public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
             if (other == null) throw new IllegalArgumentException("Second operand cannot be null");
+            if (targetUnit == null) throw new IllegalArgumentException("Target unit cannot be null");
 
-            double sumInBase = this.unit.convertToBase(this.value) +
-                    other.unit.convertToBase(other.value);
+            return performAddition(this, other, targetUnit);
+        }
 
-            double resultValue = this.unit.convertFromBase(sumInBase);
-            return new QuantityLength(resultValue, this.unit);
+        /**
+         * Private utility method to centralize addition logic (DRY)
+         */
+        private static QuantityLength performAddition(QuantityLength l1, QuantityLength l2, LengthUnit target) {
+            double sumInBase = l1.unit.convertToBase(l1.value) + l2.unit.convertToBase(l2.value);
+            double convertedValue = target.convertFromBase(sumInBase);
+            return new QuantityLength(convertedValue, target);
         }
 
         @Override
@@ -54,7 +66,7 @@ public class QuantityMeasurementApp {
             if (obj == null || getClass() != obj.getClass()) return false;
             QuantityLength that = (QuantityLength) obj;
             return Math.abs(this.unit.convertToBase(this.value) -
-                    that.unit.convertToBase(that.value)) < 0.0001;
+                    that.unit.convertToBase(that.value)) < 0.001;
         }
 
         @Override
@@ -64,37 +76,28 @@ public class QuantityMeasurementApp {
 
         @Override
         public String toString() {
-            return String.format("%.2f %s", value, unit);
+            return String.format("%.3f %s", value, unit);
         }
     }
 
-    // Static helper for UC6 demonstration
-    public static void demonstrateAddition(QuantityLength l1, QuantityLength l2) {
-        QuantityLength result = l1.add(l2);
-        System.out.println("Input: " + l1 + " + " + l2 + " -> Output: " + result);
-    }
-
     public static void main(String[] args) {
-        System.out.println("--- UC6: Addition of Length Units ---");
+        System.out.println("--- UC7: Addition with Target Unit Specification ---");
 
-        // Feet and Inches
-        demonstrateAddition(new QuantityLength(1.0, LengthUnit.FEET),
-                new QuantityLength(12.0, LengthUnit.INCH));
+        QuantityLength oneFoot = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength twelveInches = new QuantityLength(12.0, LengthUnit.INCH);
 
-        // Inches and Feet (Note: result unit follows the first operand)
-        demonstrateAddition(new QuantityLength(12.0, LengthUnit.INCH),
-                new QuantityLength(1.0, LengthUnit.FEET));
+        // Result in FEET
+        System.out.println("1ft + 12in (Target: FEET)  -> " + oneFoot.add(twelveInches, LengthUnit.FEET));
 
-        // Yards and Feet
-        demonstrateAddition(new QuantityLength(1.0, LengthUnit.YARDS),
-                new QuantityLength(3.0, LengthUnit.FEET));
+        // Result in INCHES
+        System.out.println("1ft + 12in (Target: INCHES)-> " + oneFoot.add(twelveInches, LengthUnit.INCH));
 
-        // Centimeters and Inches
-        demonstrateAddition(new QuantityLength(2.54, LengthUnit.CENTIMETERS),
-                new QuantityLength(1.0, LengthUnit.INCH));
+        // Result in YARDS
+        System.out.println("1ft + 12in (Target: YARDS) -> " + oneFoot.add(twelveInches, LengthUnit.YARDS));
 
-        // Identity Property (Adding Zero)
-        demonstrateAddition(new QuantityLength(5.0, LengthUnit.FEET),
-                new QuantityLength(0.0, LengthUnit.INCH));
+        // CM and Inches
+        QuantityLength oneCm = new QuantityLength(2.54, LengthUnit.CENTIMETERS);
+        QuantityLength oneInch = new QuantityLength(1.0, LengthUnit.INCH);
+        System.out.println("2.54cm + 1in (Target: CM)  -> " + oneCm.add(oneInch, LengthUnit.CENTIMETERS));
     }
 }
